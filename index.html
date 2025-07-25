@@ -16,7 +16,10 @@
             margin: auto;
         }
         #result {
-            margin-top: 20px;
+            position: fixed;
+            top:0;
+            left:0;
+            width:100%;
             font-size: 18px;
         }
         .found {
@@ -69,7 +72,7 @@
             if (foundItem) {
                 resultDiv.innerHTML = `<span class="found">Found! ItemSerialID: ${foundItem.itemSerialId}</span>`;
             } else {
-                resultDiv.innerHTML = `<span class="not-found">Not Found</span>`;
+                resultDiv.innerHTML = `<span class="not-found"> Not Found</span>`;
             }
         });
     </script>
