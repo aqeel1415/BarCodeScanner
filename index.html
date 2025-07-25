@@ -3,111 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Scanner</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-            background: #f9f9f9;
-        }
-        #scanner-container {
-            width: 100%;
-            height: 100vh; /* Full height for the camera view */
-            position: relative;
-            overflow: hidden;
-        }
-        #scanner {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-        }
-        .overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 80%;
-            height: 50px;
-            border: 2px solid red;
-            transform: translate(-50%, -50%);
-            pointer-events: none; /* Allow clicks to pass through */
-        }
-        #result {
-            margin-top: 20px;
-            font-size: 20px;
-        }
-    </style>
+    <title>QR Code and Barcode Scanner</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Barcode Scanner</h1>
-    <div id="scanner-container"></div>
-    <div id="result">Scan a barcode...</div>
-</body>  <script>
-        const dataset = [
-            { serialNumber: "123456789", itemSerialId: "ITEM001" },
-            { serialNumber: "987654321", itemSerialId: "ITEM002" },
-            { serialNumber: "112233445", itemSerialId: "ITEM003" }
-        ];
+    <h1>QR Code and Barcode Scanner</h1>
+    <video id="video" width="100%" height="100%"></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <div id="result"></div>
+    <button id="add-btn" style="display: none;">Add Item</button>
 
-        // Initialize the scanner
-        Quagga.init({
-            inputStream: {
-                name: "Live",
-                type: "LiveStream",
-                target: document.querySelector('#scanner-container'),
-            },
-            decoder: {
-                readers: ["code_128_reader", "ean_reader", "upc_reader"]
-            }
-        }, function (err) {
-            if (err) {
-                console.error(err);
-                return;
-            }
-            Quagga.start();
-        });
+    <script src="https:                                                             
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.18.6/dist/zxing.min.js"></script>
+    <script src="script.js"></script>
+</body>
+    <script>
+        let video = document.getElementById('video');
+let canvas = document.getElementById('canvas');
+let resultDiv = document.getElementById('result');
+let addBtn = document.getElementById('add-btn');
+let dataset = [
+    { id: 1, code: '1234567890128', type: 'barcode' },
+    { id: 2, code: '9783161484100', type: 'barcode' },
+    { id: 3, code: 'https:                                 
+                                    
+];
+let lastId = dataset.length;
+let scanning = false;
+let codeReader = new ZXing.BrowserBarcodeReader();
 
-        let isScanning = true; // Prevents continuous scanning
+                        
+navigator.mediaDevices.getUserMedia({ video: { facingMode: '//example.com', type: 'qrcode' },
+    // Add more items to the dataset
+];
+let lastId = dataset.length;
+let scanning = false;
+let codeReader = new ZXing.BrowserBarcodeReader();
 
-        // Process the scanned barcode
-        Quagga.onDetected(function (data) {
-            if (!isScanning) return;
-            isScanning = false; // Stop scanning after detection
+// Request camera access
+navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => {
+        video.srcObject = stream;
+        video.play();
+        scanning = true;
+        scanCode();
+    })
+    .catch(error => {
+        console.error('Error accessing camera:', error);
+    });
 
-            const scannedCode = data.codeResult.code;
-
-            // Search the dataset
-            const foundItem = dataset.find(item => item.serialNumber === scannedCode);
-
-            if (foundItem) {
-                const scanAgain = confirm(`Found! ItemSerialID: ${foundItem.itemSerialId}. Would you like to scan again?`);
-                if (scanAgain) {
-                    resetScanner();
-                }
+            
+function scanCode() {
+    if (scanning) {
+                              
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        let ctx = canvas.getContext('// Scan code
+function scanCode() {
+    if (scanning) {
+        // Try to scan QR code
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+        if (qrCode) {
+            let scannedValue = qrCode.data;
+            let item = dataset.find(item => item.code === scannedValue && item.type === 'qrcode');
+            if (item) {
+                resultDiv.textContent = `Item ID: ${item.id}`;
+                addBtn.style.display = 'none';
             } else {
-                const addItem = confirm(`Not Found: ${scannedCode}. Would you like to add it to the dataset?`);
-                if (addItem) {
-                    const itemId = prompt("Enter the ItemSerialID:");
-                    if (itemId) {
-                        dataset.push({ serialNumber: scannedCode, itemSerialId: itemId });
-                        alert(`Item added with ID: ${itemId}`);
-                    }
-                    resetScanner();
-                } else {
-                    resetScanner();
-                }
+                resultDiv.textContent = `Item not found.`;
+                addBtn.style.display = 'block';
+                addBtn.onclick = () => {
+                    lastId++;
+                    dataset.push({ id: lastId, code: scannedValue, type: 'qrcode' });
+                    resultDiv.textContent = `Item ID: ${lastId}`;
+                    addBtn.style.display = 'none';
+                };
             }
-        });
-
-        function resetScanner() {
-            isScanning = true; // Allow scanning again
-            Quagga.start(); // Restart scanning
-            document.getElementById("result").innerText = "Scan a barcode..."; // Reset result text
+        } else {
+                                  
+            codeReader.decodeFromVideoDevice(null, '// Try to scan barcode
+            codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+                if (result) {
+                    let scannedValue = result.text;
+                    let item = dataset.find(item => item.code === scannedValue && item.type === 'barcode');
+                    if (item) {
+                        resultDiv.textContent = `Item ID: ${item.id}`;
+                        addBtn.style.display = 'none';
+                    } else {
+                        resultDiv.textContent = `Item not found.`;
+                        addBtn.style.display = 'block';
+                        addBtn.onclick = () => {
+                            lastId++;
+                            dataset.push({ id: lastId, code: scannedValue, type: 'barcode' });
+                            resultDiv.textContent = `Item ID: ${lastId}`;
+                            addBtn.style.display = 'none';
+                        };
+                    }
+                }
+                if (err) {
+                    console.error('Error scanning code:', err);
+                }
+            });
         }
+        requestAnimationFrame(scanCode);
+    }
+}
     </script>
 </html>
