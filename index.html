@@ -40,7 +40,6 @@
     <div id="result">Scan a barcode...</div>
 
     <script>
-        // Sample dataset (replace this with your actual dataset)
         const dataset = [
             { serialNumber: "123456789", itemSerialId: "ITEM001" },
             { serialNumber: "987654321", itemSerialId: "ITEM002" },
@@ -78,16 +77,30 @@
             const foundItem = dataset.find(item => item.serialNumber === scannedCode);
 
             if (foundItem) {
-                alert(`Found! ItemSerialID: ${foundItem.itemSerialId}`);
+                const scanAgain = confirm(`Found! ItemSerialID: ${foundItem.itemSerialId}. Would you like to scan again?`);
+                if (scanAgain) {
+                    resetScanner();
+                }
             } else {
-                alert(`Not Found: ${scannedCode}`);
+                const addItem = confirm(`Not Found: ${scannedCode}. Would you like to add it to the dataset?`);
+                if (addItem) {
+                    const itemId = prompt("Enter the ItemSerialID:");
+                    if (itemId) {
+                        dataset.push({ serialNumber: scannedCode, itemSerialId: itemId });
+                        alert(`Item added with ID: ${itemId}`);
+                    }
+                    resetScanner();
+                } else {
+                    resetScanner();
+                }
             }
-
-            // Optionally, restart scanning after a delay
-            setTimeout(() => {
-                isScanning = true; // Allow scanning again
-            }, 3000); // 3 seconds delay before resuming
         });
+
+        function resetScanner() {
+            isScanning = true; // Allow scanning again
+            Quagga.start(); // Restart scanning
+            document.getElementById("result").innerText = "Scan a barcode..."; // Reset result text
+        }
     </script>
 </body>
 </html>
