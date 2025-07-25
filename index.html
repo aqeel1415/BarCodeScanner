@@ -9,18 +9,28 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
+            margin: 0;
+            padding: 20px;
+            background: #f9f9f9;
         }
         #scanner-container {
             width: 100%;
-            max-width: 400px;
-            margin: auto;
+            max-width: 100%;
+            height: auto;
+            aspect-ratio: 16 / 9; /* Maintain a 16:9 aspect ratio */
+            margin-bottom: 20px;
+            background: #000; /* Background for scanner area */
         }
         #result {
-            position: fixed;
-            top:0;
-            left:0;
-            width:100%;
-            font-size: 18px;
+            position: relative;
+            width: 100%;
+            font-size: 20px;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .found {
             color: green;
@@ -72,7 +82,7 @@
             if (foundItem) {
                 resultDiv.innerHTML = `<span class="found">Found! ItemSerialID: ${foundItem.itemSerialId}</span>`;
             } else {
-                resultDiv.innerHTML = `<span class="not-found"> Not Found</span>`;
+                resultDiv.innerHTML = `<span class="not-found">Not Found</span>`;
             }
         });
     </script>
