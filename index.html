@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode/QR Code Scanner</title>
+    <title>Barcode Scanner</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
     <style>
         body {
@@ -27,7 +27,16 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
         }
-
+        .overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80%;
+            height: 50px;
+            border: 2px solid red;
+            transform: translate(-50%, -50%);
+            pointer-events: none; /* Allow clicks to pass through */
+        }
         #result {
             margin-top: 20px;
             font-size: 20px;
@@ -35,76 +44,72 @@
     </style>
 </head>
 <body>
-    <h1>Barcode/QR Code Scanner</h1>
-    <div id="scanner-container">
-        <div id="scanner"></div>
-        <div class="overlay"></div>
-    </div>
-    <div id="result">Scan a barcode or QR code...</div>
+    <h1>Barcode Scanner</h1>
+    <div id="scanner-container"></div>
+    <div id="result">Scan a barcode...</div>
 
     <script>
-        // Sample dataset
-        let dataset = [
+        const dataset = [
             { serialNumber: "123456789", itemSerialId: "ITEM001" },
             { serialNumber: "987654321", itemSerialId: "ITEM002" },
             { serialNumber: "112233445", itemSerialId: "ITEM003" }
         ];
 
         // Initialize the scanner
-        function initScanner() {
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: document.querySelector('#scanner'),
-                },
-                decoder: {
-                    readers: ["code_128_reader", "ean_reader", "upc_reader", "qr_reader"]
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#scanner-container'),
+            },
+            decoder: {
+                readers: ["code_128_reader", "ean_reader", "upc_reader"]
+            }
+        }, function (err) {
+            if (err) {
+                console.error(err);
+                return;
+            }
+            Quagga.start();
+        });
+
+        let isScanning = true; // Prevents continuous scanning
+
+        // Process the scanned barcode
+        Quagga.onDetected(function (data) {
+            if (!isScanning) return;
+            isScanning = false; // Stop scanning after detection
+
+            const scannedCode = data.codeResult.code;
+
+            // Search the dataset
+            const foundItem = dataset.find(item => item.serialNumber === scannedCode);
+
+            if (foundItem) {
+                const scanAgain = confirm(`Found! ItemSerialID: ${foundItem.itemSerialId}. Would you like to scan again?`);
+                if (scanAgain) {
+                    resetScanner();
                 }
-            }, function(err) {
-                if (err) {
-                    console.error(err);
-                    return;
-                }
-                Quagga.start();
-                document.getElementById("result").innerText = "Scanning...";
-            });
-
-            // Process the scanned barcode
-            Quagga.onDetected(function(data) {
-                const scannedCode = data.codeResult.code;
-                const foundItem = dataset.find(item => item.serialNumber === scannedCode);
-
-                if (foundItem) {
-                    alert(`Found! ItemSerialID: ${foundItem.itemSerialId}`);
-                } else {
-                    const newItemId = `ITEM00${dataset.length + 1}`;
-                    const addItem = confirm(`Not Found: ${scannedCode}. Would you like to add it with ID: ${newItemId}?`);
-                    if (addItem) {
-                        dataset.push({ serialNumber: scannedCode, itemSerialId: newItemId });
-                        alert(`Item added with ID: ${newItemId}`);
-                    }
-                }
-
-                // Restart scanning
-                Quagga.stop();
-                setTimeout(initScanner, 1000); // Restart the scanner after a second
-            });
-        }
-
-        // Request camera permission and initialize the scanner
-        document.addEventListener('DOMContentLoaded', function() {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                    .then(initScanner)
-                    .catch(err => {
-                        console.error("Camera access denied:", err);
-                        alert("Please allow camera access to use the scanner.");
-                    });
             } else {
-                alert("Camera not supported on this device.");
+                const addItem = confirm(`Not Found: ${scannedCode}. Would you like to add it to the dataset?`);
+                if (addItem) {
+                    const itemId = prompt("Enter the ItemSerialID:");
+                    if (itemId) {
+                        dataset.push({ serialNumber: scannedCode, itemSerialId: itemId });
+                        alert(`Item added with ID: ${itemId}`);
+                    }
+                    resetScanner();
+                } else {
+                    resetScanner();
+                }
             }
         });
+
+        function resetScanner() {
+            isScanning = true; // Allow scanning again
+            Quagga.start(); // Restart scanning
+            document.getElementById("result").innerText = "Scan a barcode..."; // Reset result text
+        }
     </script>
 </body>
 </html>
