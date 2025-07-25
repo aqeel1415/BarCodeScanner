@@ -32,12 +32,6 @@
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .found {
-            color: green;
-        }
-        .not-found {
-            color: red;
-        }
     </style>
 </head>
 <body>
@@ -71,19 +65,28 @@
             Quagga.start();
         });
 
+        let isScanning = true; // Prevents continuous scanning
+
         // Process the scanned barcode
         Quagga.onDetected(function (data) {
+            if (!isScanning) return;
+            isScanning = false; // Stop scanning after detection
+
             const scannedCode = data.codeResult.code;
-            const resultDiv = document.getElementById("result");
 
             // Search the dataset
             const foundItem = dataset.find(item => item.serialNumber === scannedCode);
 
             if (foundItem) {
-                resultDiv.innerHTML = `<span class="found">Found! ItemSerialID: ${foundItem.itemSerialId}</span>`;
+                alert(`Found! ItemSerialID: ${foundItem.itemSerialId}`);
             } else {
-                resultDiv.innerHTML = `<span class="not-found">Not Found</span>`;
+                alert(`Not Found: ${scannedCode}`);
             }
+
+            // Optionally, restart scanning after a delay
+            setTimeout(() => {
+                isScanning = true; // Allow scanning again
+            }, 3000); // 3 seconds delay before resuming
         });
     </script>
 </body>
